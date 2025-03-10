@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # vue-manage-system
 
   <a href="https://github.com/lin-xin/vue-manage-system/releases">
@@ -78,3 +79,4 @@ npm run build
 ## License
 
 [MIT](https://github.com/lin-xin/vue-manage-system/blob/master/LICENSE)
+=======
