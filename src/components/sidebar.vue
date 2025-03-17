@@ -1,22 +1,27 @@
 <template>
+    <!-- 侧边栏容器 -->
     <div class="sidebar">
         <el-menu
             class="sidebar-el-menu"
-            :default-active="onRoutes"
-            :collapse="sidebar.collapse"
-            :background-color="sidebar.bgColor"
-            :text-color="sidebar.textColor"
-            router
+            :default-active="onRoutes"    
+            :collapse="sidebar.collapse"  
+            :background-color="sidebar.bgColor" 
+            :text-color="sidebar.textColor"     
+            router 
         >
+            <!-- 遍历菜单数据 -->
             <template v-for="item in menuData">
+                <!-- 如果该菜单项有子菜单 -->
                 <template v-if="item.children">
                     <el-sub-menu :index="item.index" :key="item.index" v-permiss="item.id">
                         <template #title>
                             <el-icon>
-                                <component :is="item.icon"></component>
+                                <component :is="item.icon"></component>  <!-- 动态渲染菜单图标 -->
                             </el-icon>
-                            <span>{{ item.title }}</span>
+                            <span>{{ item.title }}</span>  <!-- 菜单标题 -->
                         </template>
+
+                        <!-- 遍历子菜单 -->
                         <template v-for="subItem in item.children">
                             <el-sub-menu
                                 v-if="subItem.children"
@@ -25,6 +30,8 @@
                                 v-permiss="item.id"
                             >
                                 <template #title>{{ subItem.title }}</template>
+
+                                <!-- 三级子菜单 -->
                                 <el-menu-item
                                     v-for="(threeItem, i) in subItem.children"
                                     :key="i"
@@ -33,16 +40,20 @@
                                     {{ threeItem.title }}
                                 </el-menu-item>
                             </el-sub-menu>
+
+                            <!-- 二级子菜单 -->
                             <el-menu-item v-else :index="subItem.index" v-permiss="item.id">
                                 {{ subItem.title }}
                             </el-menu-item>
                         </template>
                     </el-sub-menu>
                 </template>
+
+                <!-- 如果该菜单项没有子菜单 -->
                 <template v-else>
                     <el-menu-item :index="item.index" :key="item.index" v-permiss="item.id">
                         <el-icon>
-                            <component :is="item.icon"></component>
+                            <component :is="item.icon"></component>  <!-- 渲染图标 -->
                         </el-icon>
                         <template #title>{{ item.title }}</template>
                     </el-menu-item>
@@ -54,11 +65,12 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useSidebarStore } from '../store/sidebar';
-import { useRoute } from 'vue-router';
-import { menuData } from '@/components/menu';
+import { useSidebarStore } from '../store/sidebar';  
+import { useRoute } from 'vue-router';  
+import { menuData } from '@/components/menu';  
 
 const route = useRoute();
+
 const onRoutes = computed(() => {
     return route.path;
 });
@@ -67,22 +79,26 @@ const sidebar = useSidebarStore();
 </script>
 
 <style scoped>
+
 .sidebar {
     display: block;
     position: absolute;
     left: 0;
-    top: 70px;
-    bottom: 0;
-    overflow-y: scroll;
+    top: 70px; 
+    bottom: 0;   
+    overflow-y: scroll;  
 }
+
 
 .sidebar::-webkit-scrollbar {
     width: 0;
 }
 
+
 .sidebar-el-menu:not(.el-menu--collapse) {
     width: 250px;
 }
+
 
 .sidebar-el-menu {
     min-height: 100%;

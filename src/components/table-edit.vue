@@ -64,6 +64,7 @@ const { options, formData, edit, update } = defineProps({
 
 const form = ref({ ...(edit ? formData : {}) });
 
+
 const rules: FormRules = options.list.map(item => {
 	if (item.required) {
 		return { [item.prop]: [{ required: true, message: `${item.label}不能为空`, trigger: 'blur' }] };

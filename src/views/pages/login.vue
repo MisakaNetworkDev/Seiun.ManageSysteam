@@ -6,8 +6,8 @@
                 <div class="login-title">后台管理系统</div>
             </div>
             <el-form :model="param" :rules="rules" ref="login" size="large">
-                <el-form-item prop="username">
-                    <el-input v-model="param.username" placeholder="用户名">
+                <el-form-item prop="user_name">
+                    <el-input v-model="param.user_name" placeholder="用户名">
                         <template #prepend>
                             <el-icon>
                                 <User />
@@ -17,7 +17,7 @@
                 </el-form-item>
                 <el-form-item prop="password">
                     <el-input
-                        type="password"
+                        :type="showPassword ? 'text' : 'password'"
                         placeholder="密码"
                         v-model="param.password"
                         @keyup.enter="submitForm(login)"
@@ -27,6 +27,11 @@
                                 <Lock />
                             </el-icon>
                         </template>
+                        <template #append>
+                            <el-icon @click="togglePassword" style="cursor: pointer;">
+                                <component :is="showPassword ? 'View' : 'Hide'" />
+                            </el-icon>
+                        </template>
                     </el-input>
                 </el-form-item>
                 <div class="pwd-tips">
@@ -34,7 +39,6 @@
                     <el-link type="primary" @click="$router.push('/reset-pwd')">忘记密码</el-link>
                 </div>
                 <el-button class="login-btn" type="primary" size="large" @click="submitForm(login)">登录</el-button>
-                <p class="login-tips">Tips : 用户名和密码随便填。</p>
                 <p class="login-text">
                     没有账号？<el-link type="primary" @click="$router.push('/register')">立即注册</el-link>
                 </p>
@@ -50,9 +54,16 @@ import { usePermissStore } from '@/store/permiss';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import type { FormInstance, FormRules } from 'element-plus';
+import { jwtDecode } from "jwt-decode"; 
+import { Lock } from '@element-plus/icons-vue';
+
+const showPassword = ref(false);
+const togglePassword = () => {
+    showPassword.value = !showPassword.value;
+};
 
 interface LoginInfo {
-    username: string;
+    user_name: string;
     password: string;
 }
 
@@ -62,12 +73,12 @@ const checked = ref(lgStr ? true : false);
 
 const router = useRouter();
 const param = reactive<LoginInfo>({
-    username: defParam ? defParam.username : '',
+    user_name: defParam ? defParam.user_name : '',
     password: defParam ? defParam.password : '',
 });
 
 const rules: FormRules = {
-    username: [
+    user_name: [
         {
             required: true,
             message: '请输入用户名',
@@ -78,23 +89,58 @@ const rules: FormRules = {
 };
 const permiss = usePermissStore();
 const login = ref<FormInstance>();
-const submitForm = (formEl: FormInstance | undefined) => {
+const submitForm = async (formEl: FormInstance | undefined) => {
     if (!formEl) return;
-    formEl.validate((valid: boolean) => {
-        if (valid) {
-            ElMessage.success('登录成功');
-            localStorage.setItem('vuems_name', param.username);
-            const keys = permiss.defaultList[param.username == 'admin' ? 'admin' : 'user'];
-            permiss.handleSet(keys);
-            router.push('/');
+
+    formEl.validate(async (valid: boolean) => {
+        if (!valid) {
+            ElMessage.error('登录失败');
+            return false;
+        }
+
+        try {
+            const response = await fetch("http://localhost:5222/api/admin/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(param),
+            });
+
+            if (!response.ok) {
+                throw new Error(`登录失败，状态码：${response.status}`);
+            }
+
+            const data = await response.json(); 
+            if (!data?.data?.token) {
+                throw new Error("登录失败，未返回 Token");
+            }
+
+            const token = data.data.token;
+            const tokenDecoded = jwtDecode(token);
+            const role = tokenDecoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
+
+            if (role !== "SuperAdmin") {
+                ElMessage.error('权限不足，仅 SuperAdmin 可登录');
+                return;
+            }
+
+            localStorage.setItem('auth_token', token);
+            localStorage.setItem('token_expire', data.data.expire_at.toString());
+            localStorage.setItem('vuems_name', param.user_name);
+
             if (checked.value) {
                 localStorage.setItem('login-param', JSON.stringify(param));
             } else {
                 localStorage.removeItem('login-param');
             }
-        } else {
-            ElMessage.error('登录失败');
-            return false;
+
+            const keys = permiss.defaultList["admin"];
+            permiss.handleSet(keys);
+
+            ElMessage.success('登录成功');
+            router.push('/');
+        } catch (error) {
+            console.error("登录请求失败:", error);
+            ElMessage.error(error.message || '登录失败，请检查用户名或密码');
         }
     });
 };
@@ -143,7 +189,7 @@ tabs.clearTabs();
     justify-content: space-between;
     align-items: center;
     font-size: 14px;
-    margin: -10px 0 10px;
+    margin: -2px 0 10px;
     color: #787878;
 }
 
