@@ -20,6 +20,18 @@ export const menuData: Menus[] = [
                 title: '用户管理',
             },
             {
+                id: '11',
+                pid: '1',
+                index: '/system-article',
+                title: '文章管理',
+            },
+            {
+                id: '11',
+                pid: '1',
+                index: '/system-word',
+                title: '词库管理',
+            },
+            {
                 id: '12',
                 pid: '1',
                 index: '/system-role',

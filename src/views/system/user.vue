@@ -2,8 +2,8 @@
     <div>
         <TableSearch :query="query" :options="searchOpt" :search="handleSearch" />
         <div class="container">
-            <TableCustom :columns="columns" :tableData="tableData" :total="page.total" :viewFunc="handleView"
-                :delFunc="handleDelete" :page-change="changePage" :editFunc="handleEdit" :refresh="getData">
+            <TableCustom :columns="columns" :tableData="tableData" :total="page.total" :page-size="page.Size" :viewFunc="handleView"
+                :delFunc="handleDelete" :change-page="changePage" :editFunc="handleEdit" :refresh="getData">
                 <template #toolbarBtn>
                     <el-button type="warning" :icon="CirclePlusFilled" @click="visible = true">新增</el-button>
                 </template>
@@ -37,13 +37,44 @@ dayjs.extend(utc);
 
 // 查询相关
 const query = reactive({
-    name: '',
+    Keyword: '',
 });
 const searchOpt = ref<FormOptionList[]>([
-    { type: 'input', label: '用户名：', prop: 'name' }
+    { type: 'input', label: '用户名：', prop: 'Keyword' }
 ])
+
+
+const getData = async () => {
+    try {
+        const res = await fetchUserData({
+            Index: page.Index,
+            Size: page.Size,    
+            ...query, 
+        }); 
+        console.log(res);
+        
+        if (res.code === 200 && res.data) {
+            tableData.value = res.data.list.map((user) => ({
+                ...user,
+                role: roleMap[user.role],
+                gender: genderMap[user.gender] || '未知',
+                last_check_in_time: user.last_check_in_time === "0001-01-01T00:00:00" 
+                    ? "未打卡" 
+                    : dayjs.utc(user.last_check_in_time).local().format("YYYY-MM-DD HH:mm:ss")
+            }));
+            page.total = res.data.total; 
+        } else {
+            ElMessage.error(res.message);
+        }
+    } catch (error) {
+        ElMessage.error('网络错误，数据获取失败');
+        console.error(error);
+    }
+};
+
 const handleSearch = () => {
     changePage(1);
+    getData();
 };
 
 // 表格相关
@@ -54,13 +85,13 @@ let columns = ref([
     { prop: 'role', label: '角色' },
     { prop: 'email', label: '邮箱' },
     { prop: 'gender', label: '性别' },
-    { prop: 'last_check_in_time', label: '最后打卡时间' },
+    { prop: 'last_check_in_time', label: '创建时间' },
     // { prop: 'nick_name', label: '昵称' },
     { prop: 'operator', label: '操作', width: 250 },
 ])
 const page = reactive({
-    index: 1,
-    size: 20,
+    Index: 1,
+    Size: 10,
     total: 0,
 })
 // 角色映射
@@ -69,6 +100,7 @@ const roleMap: Record<number, string> = {
     1: "管理员",
     2: "创作者",
     3: "普通用户",
+    4: "未知"
 };
 
 // 性别映射
@@ -79,33 +111,11 @@ const genderMap: Record<number, string> = {
 };
 const tableData = ref<User[]>([]);
 
-const getData = async () => {
-    try {
-        const res = await fetchUserData(); 
-        if (res.code === 200 && res.data) {
-            tableData.value = res.data.list.map((user: { role: string | number; gender: string | number; last_check_in_time: string; }) => ({
-                ...user,
-                role: roleMap[user.role] || '未知角色',
-                gender: genderMap[user.gender] || '未知',
-                last_check_in_time: user.last_check_in_time === "0001-01-01T00:00:00" 
-                    ? "未打卡" 
-                    : dayjs.utc(user.last_check_in_time).local().format("YYYY-MM-DD HH:mm:ss")
-            }));
-            page.total = res.data.total;
-        } else {
-            ElMessage.error(res.message);
-        }
-    } catch (error) {
-        ElMessage.error('网络错误，数据获取失败');
-        console.error(error);
-    }
-};
-
 getData();
 
 const changePage = (val: number) => {
-    page.index = val;
-    getData();
+    page.Index = val;
+    getData(); 
 };
 
 // 新增/编辑弹窗相关
@@ -135,7 +145,7 @@ const handleEdit = (row: User) => {
 
 
 const updateData = async (newData: UserUpdateTable) => {
-    console.log(newData);
+
     if (!rowData.value) {
         console.error('rowData 为空，无法更新');
         return;
@@ -166,12 +176,6 @@ const updateData = async (newData: UserUpdateTable) => {
 };
 
 
-// const updateData = () => {
-//     closeDialog();
-//     console.log(rowData.value);
-//     console.log(rowData.value.user_id);
-//     getData();
-// };
 
 const closeDialog = () => {
     visible.value = false;
@@ -246,4 +250,5 @@ const handleDelete = async (row: User) => {
 
 </script>
 
-<style scoped></style>
+<style scoped>
+</style>

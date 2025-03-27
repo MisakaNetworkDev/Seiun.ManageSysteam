@@ -40,36 +40,46 @@
             <template v-for="item in columns" :key="item.prop">
                 <el-table-column v-if="item.visible" :prop="item.prop" :label="item.label" :width="item.width"
                     :type="item.type" :align="item.align || 'center'">
-
                     <template #default="{ row, column, $index }" v-if="item.type === 'index'">
                         {{ getIndex($index) }}
                     </template>
-                    <template #default="{ row, column, $index }" v-if="!item.type">
-                        <slot :name="item.prop" :rows="row" :index="$index">
-                            <template v-if="item.prop == 'operator'">
-                                <el-button type="warning" size="small" :icon="View" @click="viewFunc(row)">
-                                    查看
-                                </el-button>
-                                <el-button type="primary" size="small" :icon="Edit" @click="editFunc(row)">
-                                    编辑
-                                </el-button>
-                                <el-button type="danger" size="small" :icon="Delete" @click="handleDelete(row)">
-                                    删除
-                                </el-button>
-                            </template>
-                            <span v-else-if="item.formatter">
-                                {{ item.formatter(row[item.prop]) }}
-                            </span>
-                            <span v-else>
-                                {{ row[item.prop] }}
-                            </span>
-                        </slot>
-                    </template>
+                    <template v-if="item.type === 'image'" #default="{ row }">
+				<div style="display: flex; gap: 5px;">
+					<el-image
+						v-for="(imgSrc, index) in row[item.prop]"
+						:key="index"
+						:src="typeof imgSrc === 'string' && imgSrc.startsWith('http') ? imgSrc : `http://localhost:5222/resources/article-image/${imgSrc}`"
+						style="width: 50px; height: 50px;"
+						fit="cover"
+					/>
+				</div>
+			</template>
+                <template #default="{ row, column, $index }" v-if="!item.type">
+                    <slot :name="item.prop" :rows="row" :index="$index">
+                        <template v-if="item.prop == 'operator'">
+                            <el-button type="warning" size="small" :icon="View" @click="viewFunc(row)">
+                                查看
+                            </el-button>
+                            <el-button type="primary" size="small" :icon="Edit" @click="editFunc(row)">
+                                编辑
+                            </el-button>
+                            <el-button type="danger" size="small" :icon="Delete" @click="handleDelete(row)">
+                                删除
+                            </el-button>
+                        </template>
+                        <span v-else-if="item.formatter">
+                            {{ item.formatter(row[item.prop]) }}
+                        </span>
+                        <span v-else>
+                            {{ row[item.prop] }}
+                        </span>
+                    </slot>
+                </template>
                 </el-table-column>
             </template>
         </el-table>
         <el-pagination v-if="hasPagination" :current-page="currentPage" :page-size="pageSize" :background="true"
-            :layout="layout" :total="total" @current-change="handleCurrentChange" />
+            :layout="layout" :total="total" @current-change="handleCurrentChange" :change-page="changePage" />
     </div>
 </template>
 
@@ -101,13 +111,13 @@ const props = defineProps({
         type: Boolean,
         default: true
     },
+    changePage: {
+        type: Function,
+        default: () => { }
+    },
     total: {
         type: Number,
         default: 0
-    },
-    currentPage: {
-        type: Number,
-        default: 1
     },
     pageSize: {
         type: Number,
@@ -137,10 +147,6 @@ const props = defineProps({
     refresh: {
         type: Function,
         default: () => { }
-    },
-    changePage: {
-        type: Function,
-        default: () => { }
     }
 })
 
@@ -151,10 +157,11 @@ let {
     hasToolbar,
     hasPagination,
     total,
-    currentPage,
     pageSize,
     layout,
 } = toRefs(props)
+
+const currentPage = ref(1);
 
 columns.value.forEach((item) => {
     if (item.visible === undefined) {
@@ -168,12 +175,12 @@ const handleSelectionChange = (selection: any[]) => {
     multipleSelection.value = selection
 }
 
-// 当前页码变化的事件
 const handleCurrentChange = (val: number) => {
+    currentPage.value = val;
     props.changePage(val)
 }
 
-const handleDelete = (row) => {
+const handleDelete = (row: any) => {
     ElMessageBox.confirm('确定要删除吗？', '提示', {
         type: 'warning'
     })
@@ -181,6 +188,7 @@ const handleDelete = (row) => {
             props.delFunc(row);
         })
         .catch(() => { });
+        console.log(props.pageSize);
 };
 
 const getIndex = (index: number) => {

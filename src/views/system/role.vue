@@ -12,9 +12,6 @@
                     <el-tag type="success" v-if="rows.status">启用</el-tag>
                     <el-tag type="danger" v-else>禁用</el-tag>
                 </template>
-                <template #permissions="{ rows }">
-                    <el-button type="primary" size="small" plain @click="handlePermission(rows)">管理</el-button>
-                </template>
             </TableCustom>
         </div>
         <el-dialog :title="isEdit ? '编辑' : '新增'" v-model="visible" width="700px" destroy-on-close
@@ -39,7 +36,7 @@
 import { ref, reactive } from 'vue';
 import { ElMessage } from 'element-plus';
 import { Role } from '@/types/role';
-import { fetchRoleData } from '@/api';
+import { fetchRolesData, fetchRolesDelete } from '@/api';
 import TableCustom from '@/components/table-custom.vue';
 import TableDetail from '@/components/table-detail.vue';
 import RolePermission from './role-permission.vue'
@@ -48,10 +45,10 @@ import { FormOption, FormOptionList } from '@/types/form-option';
 
 // 查询相关
 const query = reactive({
-    name: '',
+    Keyword: '',
 });
 const searchOpt = ref<FormOptionList[]>([
-    { type: 'input', label: '角色名称：', prop: 'name' }
+    { type: 'input', label: '角色Guid:', prop: 'name' }
 ])
 const handleSearch = () => {
     changePage(1);
@@ -60,26 +57,44 @@ const handleSearch = () => {
 // 表格相关
 let columns = ref([
     { type: 'index', label: '序号', width: 55, align: 'center' },
-    { prop: 'name', label: '角色名称' },
-    { prop: 'key', label: '角色标识' },
-    { prop: 'status', label: '状态' },
-    { prop: 'permissions', label: '权限管理' },
+    { prop: 'user_id', label: '用户Guid' },
+    { prop: 'role_name', label: '角色标识' },
     { prop: 'operator', label: '操作', width: 250 },
 ])
 const page = reactive({
-    index: 1,
-    size: 10,
+    Index: 1,
+    Size: 10,
     total: 0,
 })
+const roleMap: Record<number, string> = {
+    0: "超级管理员",
+    1: "管理员",
+    2: "创作者",
+    3: "普通用户",
+    4: "未知"
+};
 const tableData = ref<Role[]>([]);
 const getData = async () => {
-    const res = await fetchRoleData()
-    tableData.value = res.data.list;
-    page.total = res.data.pageTotal;
+    // console.log(roleMap[0]);
+    const res = await fetchRolesData({
+            Index: page.Index,
+            Size: page.Size,    
+            ...query, 
+        }); 
+    console.log(res);
+    if (res.code === 200 && res.data) {
+        tableData.value = res.data.list.map((Role) => ({
+            ...Role,
+            role_name: roleMap[Role.role_name],
+        }));
+
+        page.total = res.data.total;
+    }
 };
+
 getData();
 const changePage = (val: number) => {
-    page.index = val;
+    page.Index = val;
     getData();
 };
 
@@ -88,9 +103,8 @@ const options = ref<FormOption>({
     labelWidth: '100px',
     span: 24,
     list: [
-        { type: 'input', label: '角色名称', prop: 'name', required: true },
-        { type: 'input', label: '角色标识', prop: 'key', required: true },
-        { type: 'switch', label: '状态', prop: 'status', required: false, activeText: '启用', inactiveText: '禁用' },
+        { type: 'input', label: '用户Guid', prop: 'user_id', required: true },
+        { type: 'input', label: '角色名称', prop: 'role_name', required: false },
     ]
 })
 const visible = ref(false);
@@ -98,6 +112,7 @@ const isEdit = ref(false);
 const rowData = ref({});
 const handleEdit = (row: Role) => {
     rowData.value = { ...row };
+    console.log(row.role_name);
     isEdit.value = true;
     visible.value = true;
 };
@@ -122,41 +137,37 @@ const handleView = (row: Role) => {
     viewData.value.row = { ...row }
     viewData.value.list = [
         {
-            prop: 'id',
-            label: '角色ID',
+            prop: 'user_id',
+            label: '用户Guid',
         },
         {
-            prop: 'name',
-            label: '角色名称',
-        },
-        {
-            prop: 'key',
+            prop: 'role_name',
             label: '角色标识',
-        },
-        {
-            prop: 'status',
-            label: '角色状态',
-        },
+        }
     ]
     visible1.value = true;
 };
 
 // 删除相关
-const handleDelete = (row: Role) => {
-    ElMessage.success('删除成功');
+const handleDelete = async (row: Role) => {
+    try {
+        const res = await fetchRolesDelete(row.user_id);
+        if (res.code === 200) {
+            ElMessage.success('删除成功');
+            getData(); 
+        } else {
+            ElMessage.error(res.message);
+        }
+    } catch (error) {
+        console.error('删除失败', error);
+        ElMessage.error('删除失败，请稍后重试');
+    }
 }
 
 
 // 权限管理弹窗相关
 const visible2 = ref(false);
 const permissOptions = ref({})
-const handlePermission = (row: Role) => {
-    visible2.value = true;
-    permissOptions.value = {
-        id: row.id,
-        permiss: row.permiss
-    };
-}
 </script>
 
 <style scoped></style>

@@ -19,7 +19,7 @@ export const usePermissStore = defineStore('permiss', {
         let key: string[] = [];
         const token = localStorage.getItem('auth_token');
 
-        if (token) {
+        if (token != null) {
             try {
                 const tokenDecoded = jwtDecode(token);
                 const role = tokenDecoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];

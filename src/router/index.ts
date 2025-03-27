@@ -42,6 +42,24 @@ const routes: RouteRecordRaw[] = [
                 component: () => import(/* webpackChunkName: "system-role" */ '../views/system/role.vue'),
             },
             {
+                path: '/system-article',
+                name: 'system-article',
+                meta: {
+                    title: '文章管理',
+                    permiss: '11',
+                },
+                component: () => import(/* webpackChunkName: "system-article" */ '../views/system/article.vue'),
+            },
+            {
+                path: '/system-word',
+                name: 'system-word',
+                meta: {
+                    title: '单词管理',
+                    permiss: '11',
+                },
+                component: () => import(/* webpackChunkName: "system-article" */ '../views/system/word.vue'),
+            },
+            {
                 path: '/system-menu',
                 name: 'system-menu',
                 meta: {

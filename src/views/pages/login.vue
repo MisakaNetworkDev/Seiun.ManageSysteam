@@ -99,7 +99,7 @@ const submitForm = async (formEl: FormInstance | undefined) => {
         }
 
         try {
-            const response = await fetch("http://localhost:5222/api/admin/login", {
+            const response = await fetch("api/admin/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(param),

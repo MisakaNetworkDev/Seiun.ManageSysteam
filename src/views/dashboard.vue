@@ -15,33 +15,33 @@
             <el-col :span="6">
                 <el-card shadow="hover" body-class="card-body">
                     <el-icon class="card-icon bg2">
-                        <ChatDotRound />
+                        <Loading />
                     </el-icon>
                     <div class="card-content">
                         <countup class="card-num color2" :end="168" />
-                        <div>系统消息</div>
+                        <div>累计生成</div>
                     </div>
                 </el-card>
             </el-col>
             <el-col :span="6">
                 <el-card shadow="hover" body-class="card-body">
                     <el-icon class="card-icon bg3">
-                        <Goods />
+                        <Star />
                     </el-icon>
                     <div class="card-content">
                         <countup class="card-num color3" :end="8888" />
-                        <div>商品数量</div>
+                        <div>单词数量</div>
                     </div>
                 </el-card>
             </el-col>
             <el-col :span="6">
                 <el-card shadow="hover" body-class="card-body">
                     <el-icon class="card-icon bg4">
-                        <ShoppingCartFull />
+                        <View />
                     </el-icon>
                     <div class="card-content">
                         <countup class="card-num color4" :end="568" />
-                        <div>今日订单量</div>
+                        <div>今日访问量</div>
                     </div>
                 </el-card>
             </el-col>
@@ -51,8 +51,8 @@
             <el-col :span="18">
                 <el-card shadow="hover">
                     <div class="card-header">
-                        <p class="card-header-title">订单动态</p>
-                        <p class="card-header-desc">最近一周订单状态，包括订单成交量和订单退货量</p>
+                        <p class="card-header-title">请求动态</p>
+                        <p class="card-header-desc">最近一周请求状态</p>
                     </div>
                     <v-chart class="chart" :option="dashOpt1" />
                 </el-card>
@@ -60,8 +60,8 @@
             <el-col :span="6">
                 <el-card shadow="hover">
                     <div class="card-header">
-                        <p class="card-header-title">品类分布</p>
-                        <p class="card-header-desc">最近一个月销售商品的品类情况</p>
+                        <p class="card-header-title">单词分布</p>
+                        <p class="card-header-desc">词库总体情况</p>
                     </div>
                     <v-chart class="chart" :option="dashOpt2" />
                 </el-card>
@@ -91,7 +91,7 @@
                 <el-card shadow="hover" :body-style="{ height: '400px' }">
                     <div class="card-header">
                         <p class="card-header-title">渠道统计</p>
-                        <p class="card-header-desc">最近一个月的订单来源统计</p>
+                        <p class="card-header-desc">最近一个月的请求来源统计</p>
                     </div>
                     <v-chart class="map-chart" :option="mapOptions" />
                 </el-card>
@@ -100,7 +100,7 @@
                 <el-card shadow="hover" :body-style="{ height: '400px' }">
                     <div class="card-header">
                         <p class="card-header-title">排行榜</p>
-                        <p class="card-header-desc">销售商品的热门榜单Top5</p>
+                        <p class="card-header-desc">单词错误榜单Top5</p>
                     </div>
                     <div>
                         <div class="rank-item" v-for="(rank, index) in ranks">
@@ -108,7 +108,7 @@
                             <div class="rank-item-content">
                                 <div class="rank-item-top">
                                     <div class="rank-item-title">{{ rank.title }}</div>
-                                    <div class="rank-item-desc">销量：{{ rank.value }}</div>
+                                    <div class="rank-item-desc">错误量：{{ rank.value }}</div>
                                 </div>
                                 <el-progress
                                     :show-text="false"
@@ -156,32 +156,32 @@ use([
 registerMap('china', chinaMap);
 const activities = [
     {
-        content: '收藏商品',
-        description: 'xxx收藏了你的商品，就是不买',
+        content: '背词',
+        description: 'xxx开始会话',
         timestamp: '30分钟前',
         color: '#00bcd4',
     },
     {
-        content: '用户评价',
-        description: 'xxx给了某某商品一个差评，吐血啊',
+        content: '用户做题',
+        description: 'xxx在开始做题',
         timestamp: '55分钟前',
         color: '#1ABC9C',
     },
     {
-        content: '订单提交',
-        description: 'xxx提交了订单，快去收钱吧',
+        content: '文章生成',
+        description: 'xxx生成了新文章',
         timestamp: '1小时前',
         color: '#3f51b5',
     },
     {
-        content: '退款申请',
-        description: 'xxx申请了仅退款，又要亏钱了',
+        content: '选择了词书',
+        description: 'xxx选择了词书',
         timestamp: '15小时前',
         color: '#f44336',
     },
     {
-        content: '商品上架',
-        description: '运营专员瞒着你上架了一辆飞机',
+        content: '完成会话',
+        description: 'xxx终于完成了会话',
         timestamp: '1天前',
         color: '#009688',
     },

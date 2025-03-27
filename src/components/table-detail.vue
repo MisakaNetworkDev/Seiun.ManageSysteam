@@ -1,31 +1,60 @@
 <template>
-	<!-- 使用 Element Plus 的 el-descriptions 组件显示数据 -->
 	<el-descriptions :title="title" :column="column" border>
-		<!-- 遍历 list 数组，为每个 item 生成一个 el-descriptions-item -->
-		<el-descriptions-item v-for="item in list" :span="item.span">
-			<!-- 作用域插槽，定义 label 的内容 -->
+		<el-descriptions-item v-for="item in list" :key="item.prop" :span="item.span">
 			<template #label> 
 				{{ item.label }} 
 			</template>
 
-			<!-- 这里是默认插槽，允许外部自定义显示内容 -->
-			<slot :name="item.prop" :rows="row">
-				<!-- 默认情况下，显示 item.value 或 row[item.prop] -->
-				{{ item.value || row[item.prop] }}
-			</slot>
+			<template v-if="item.type === 'image'">
+				<div style="display: flex; gap: 5px;">
+					<el-image
+						v-for="(imgSrc, index) in row[item.prop] || []"
+						:key="index"
+						:src="typeof imgSrc === 'string' && imgSrc.startsWith('http') ? imgSrc : `http://localhost:5222/resources/article-image/${imgSrc}`"
+						style="width: 50px; height: 50px; cursor: pointer;"
+						fit="cover"
+						@click="showCarousel(row[item.prop])"
+					/>
+				</div>
+			</template>
+
+			<template v-else>
+				<slot :name="item.prop" :rows="row">
+					{{ item.value || row[item.prop] }}
+				</slot>
+			</template>
 		</el-descriptions-item>
 	</el-descriptions>
+
+	<!-- 弹出轮播对话框 -->
+	<el-dialog v-model="dialogVisible" title="图片预览" width="50%">
+		<el-carousel height="400px">
+			<el-carousel-item v-for="(imgSrc, index) in currentImages" :key="index">
+				<el-image :src="imgSrc" fit="contain" style="width: 100%; height: 100%;" />
+			</el-carousel-item>
+		</el-carousel>
+	</el-dialog>
 </template>
 
 <script lang="ts" setup>
+import { ref } from 'vue';
+
 // 定义组件的 props
 const props = defineProps({
 	data: {
-		type: Object, // 传入的数据对象
-		required: true, // 必须传递该数据
+		type: Object, 
+		required: true,
 	}
 });
 
-// 解构 props.data，获取 row、title、column、list
 const { row, title, column = 2, list } = props.data;
+
+// 弹出层相关状态
+const dialogVisible = ref(false);
+const currentImages = ref<string[]>([]);
+
+const showCarousel = (images: string[]) => {
+  currentImages.value = images;
+  dialogVisible.value = true;
+};
 </script>
